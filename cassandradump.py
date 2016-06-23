@@ -292,6 +292,11 @@ def setup_cluster():
     else:
         port = args.port
 
+    if args.consistency_level is None:
+        consistency_level = "ConsistencyLevel.LOCAL_ONE"
+    else:
+        consistency_level = "ConsistencyLevel.%s" % args.consistency_level
+
     cluster = None
 
     if args.protocol_version is not None:
@@ -309,6 +314,7 @@ def setup_cluster():
 
     session = cluster.connect()
 
+    session.default_consistency_level = consistency_level
     session.default_timeout = TIMEOUT
     session.default_fetch_size = FETCH_SIZE
     session.row_factory = cassandra.query.ordered_dict_factory
@@ -325,6 +331,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='A data exporting tool for Cassandra inspired from mysqldump, with some added slice and dice capabilities.')
     parser.add_argument('--cf', help='export a column family. The name must include the keyspace, e.g. "system.schema_columns". Can be specified multiple times', action='append')
+    parser.add_argument('--consistency-level', help='the consistency level for queries (LOCAL_ONE if omitted)')
     parser.add_argument('--export-file', help='export data to the specified file')
     parser.add_argument('--filter', help='export a slice of a column family according to a CQL filter. This takes essentially a typical SELECT query stripped of the initial "SELECT ... FROM" part (e.g. "system.schema_columns where keyspace_name =\'OpsCenter\'", and exports only that data. Can be specified multiple times', action='append')
     parser.add_argument('--host', help='the address of a Cassandra node in the cluster (localhost if omitted)')
